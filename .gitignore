@@ -1,0 +1,31 @@
+# Archivos generados por compilacion
+*.o
+*.a
+*.so
+*.out
+*.exe
+
+# Ejecutable principal
+/cnn
+
+# Archivos de construccion
+Makefile
+CMakeCache.txt
+CMakeFiles
+cmake_install.cmake
+build/
+
+# Archivos generados por IDE
+.vscode/
+.idea/
+*.user
+
+# Logs y resultados
+*.log
+*.csv
+*.txt
+results/
+
+# Datos de entrenamiento/test
+/data/
+/datasets/
