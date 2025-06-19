@@ -33,3 +33,24 @@ Tensor dot_product(const Tensor &a, const Tensor &b) {
     
     return result;
 }
+
+
+// Devuelve el índice del elemento con mayor valor en el tensor
+inline int argmax(const Tensor& tensor) {
+    if (tensor.data.empty()) {
+        throw std::runtime_error("Tensor vacío en argmax");
+    }
+    
+    const auto& data = tensor.data;
+    int max_index = 0;
+    float max_val = data[0];
+    
+    for (size_t i = 1; i < data.size(); ++i) {
+        if (data[i] > max_val) {
+            max_val = data[i];
+            max_index = static_cast<int>(i);
+        }
+    }
+    
+    return max_index;
+}

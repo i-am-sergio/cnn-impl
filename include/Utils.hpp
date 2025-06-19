@@ -1,5 +1,9 @@
 #pragma once
 
+#include "Dense.hpp"
+#include "Conv2D.hpp"
+#include "Flatten.hpp"
+
 #include <chrono>
 #include <memory>
 #include <vector>
@@ -33,4 +37,46 @@ inline double stop_timer(const TimePoint& start_time) {
 // Imprime duracion en segundos con formato
 inline void print_duration(double duration, const string& label) {
     cout << label << ": " << fixed << setprecision(2) << duration << " s" << endl;
+}
+
+// Funciones auxiliares para crear capas
+auto dense = [](int in, int out, const string& act, float lambda = 0.0) {
+    return std::make_unique<Dense>(in, out, act, lambda);
+};
+
+auto dropout = [](float rate){
+    return std::make_unique<Dropout>(rate);
+};
+
+auto conv2d = [](int in_ch, int out_ch, int kernel = 3, int stride = 1, int pad = 0) {
+    return std::make_unique<Conv2D>(in_ch, out_ch, kernel, stride, pad);
+};
+
+auto flatten = []() {
+    return std::make_unique<Flatten>();
+};
+
+// Convertir un vector de vectores a batch de tensores 1D
+vector<Tensor> to_tensor_batch_1D(const vector<vector<float>>& data) {
+    vector<Tensor> tensors;
+    for (const auto& vec : data) { // Itera sobre cada vector de data
+        Tensor t({vec.size()});  // Crea un Tensor 1D con el tamaño del vector
+        for (size_t i = 0; i < vec.size(); i++)
+            t({i}) = vec[i];
+        tensors.push_back(t);
+    }
+    return tensors;  // Retorna el vector de tensores
+}
+
+
+// Convertir MNIST (784 elementos) a tensores 4D [1, 28, 28]
+vector<Tensor> to_tensor_batch(const vector<vector<float>>& data) {
+    vector<Tensor> tensors;
+    for (const auto& vec : data) {
+        assert(vec.size() == 784 && "Cada imagen MNIST debe tener 784 valores");
+        Tensor t({1, 28, 28});  // Formato [canales=1, altura=28, ancho=28]
+        t.data = vec;  // Los datos ya están en el orden correcto
+        tensors.push_back(t);
+    }
+    return tensors;
 }
