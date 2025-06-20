@@ -56,25 +56,24 @@ auto flatten = []() {
     return std::make_unique<Flatten>();
 };
 
-// Convertir un vector de vectores a batch de tensores 1D
+// Convertir labels one-hot a tensores 1D [10] (solo para etiquetas)
 vector<Tensor> to_tensor_batch_1D(const vector<vector<float>>& data) {
     vector<Tensor> tensors;
-    for (const auto& vec : data) { // Itera sobre cada vector de data
-        Tensor t({vec.size()});  // Crea un Tensor 1D con el tamaño del vector
-        for (size_t i = 0; i < vec.size(); i++)
-            t({i}) = vec[i];
+    for (const auto& vec : data) {
+        assert(vec.size() == 10 && "Cada etiqueta debe tener 10 valores (one-hot)");
+        Tensor t({vec.size()});  // Tensor 1D [10]
+        t.data = vec;  
         tensors.push_back(t);
     }
-    return tensors;  // Retorna el vector de tensores
+    return tensors;
 }
 
-
-// Convertir MNIST (784 elementos) a tensores 4D [1, 28, 28]
-vector<Tensor> to_tensor_batch(const vector<vector<float>>& data) {
+// Convertir MNIST a tensores 4D [1, 1, 28, 28] (batch=1, channels=1, height=28, width=28)
+vector<Tensor> to_tensor_batch_4D(const vector<vector<float>>& data) {
     vector<Tensor> tensors;
     for (const auto& vec : data) {
         assert(vec.size() == 784 && "Cada imagen MNIST debe tener 784 valores");
-        Tensor t({1, 28, 28});  // Formato [canales=1, altura=28, ancho=28]
+        Tensor t({1, 1, 28, 28});  // Formato [batch=1, canales=1, altura=28, ancho=28]
         t.data = vec;  // Los datos ya están en el orden correcto
         tensors.push_back(t);
     }

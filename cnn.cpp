@@ -26,11 +26,10 @@ int main() {
     NeuralNetwork model;
     
     // Arquitectura CNN corregida
-    model.add_layer(conv2d(1, 32));  // 1 canal de entrada (MNIST), 32 filtros
-    model.add_layer(flatten());      // Aplanar para conectar a densa
-    model.add_layer(dense(32*28*28, 256, "relu"));
-    model.add_layer(dropout(0.4f));
-    model.add_layer(dense(256, 10, "softmax"));
+    model.add_layer(conv2d(1, 8, 5, 2, 2));   // 8 filtros 5x5, stride=2 → [8,14,14]
+    model.add_layer(flatten());                // [8*14*14] = 1,568
+    model.add_layer(dense(1568, 32, "relu"));  
+    model.add_layer(dense(32, 10, "softmax"));
 
     model.compile(LOSS_FUNCTION, OPTIMIZER, LEARNING_RATE);
     cout << "Modelo CNN compilado exitosamente." << endl;
@@ -39,19 +38,21 @@ int main() {
     vector<vector<float>> raw_X_train, raw_Y_train;
     Reader::load_bin("../topicos-inteligencia-artificial/datasets/MNISTdataset/mnist_train.bin", raw_X_train, raw_Y_train, 60000);
     
-    // Convertir a tensores 4D
-    vector<Tensor> X_train = to_tensor_batch(raw_X_train);
-    vector<Tensor> Y_train = to_tensor_batch(raw_Y_train);  // Esto sigue siendo 1D
-
     // Validación y test
     vector<vector<float>> raw_X_test, raw_Y_test;
     Reader::load_bin("../topicos-inteligencia-artificial/datasets/MNISTdataset/mnist_test.bin", raw_X_test, raw_Y_test, 10000);
-    vector<Tensor> X_test = to_tensor_batch(raw_X_test);
-    vector<Tensor> Y_test = to_tensor_batch(raw_Y_test);
+    cout << raw_X_train[0].size() << endl; // 784
+    cout << raw_Y_train[0].size() << endl; // 10 one hot
 
+    // Convertir a tensores
+    vector<Tensor> X_train = to_tensor_batch_4D(raw_X_train);
+    vector<Tensor> Y_train = to_tensor_batch_1D(raw_Y_train); 
+    vector<Tensor> X_test = to_tensor_batch_4D(raw_X_test);
+    vector<Tensor> Y_test = to_tensor_batch_1D(raw_Y_test);
+    
     // Entrenamiento
     auto start = start_timer();
-    model.fit(X_train, Y_train, X_test, Y_test, EPOCHS, BATCH_SIZE, 100, true);
+    model.fit(X_train, Y_train, X_test, Y_test, EPOCHS, BATCH_SIZE, 1, true);
     double duration = stop_timer(start);
     print_duration(duration, "Tiempo de entrenamiento");
 
@@ -62,13 +63,18 @@ int main() {
 
 void test_model(NeuralNetwork& model, vector<Tensor>& X_test, vector<Tensor>& Y_test) {
     int correct = 0;
-    #pragma omp parallel for reduction(+:correct)
-    for (size_t i = 0; i < X_test.size(); i++) {
+    int total = X_test.size();
+
+    for (int i = 0; i < total; i++) {
         Tensor pred = model.predict(X_test[i]);
-        if (argmax(pred) == argmax(Y_test[i])) {
+        int pred_label = argmax(pred);
+        int true_label = argmax(Y_test[i]);
+
+        if (pred_label == true_label) {
             correct++;
         }
     }
-    cout << "Precisión en test: " << fixed << setprecision(2) 
-         << (100.0f * correct / X_test.size()) << "%" << endl;
+
+    float accuracy = 100.0f * correct / total;
+    cout << "Precisión en test: " << fixed << setprecision(2) << accuracy << "%" << endl;
 }
