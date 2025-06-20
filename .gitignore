@@ -32,3 +32,6 @@ results/
 # Datos de entrenamiento/test
 /data/
 /datasets/
+
+convert
+database
